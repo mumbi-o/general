@@ -1,0 +1,262 @@
+﻿<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" xmlns:ags="http://aggregator.microsoft.com/internal" Version="4.0">
+	<edmx:DataServices>
+		<Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="microsoft.graph" Alias="self">
+			<!-- Begin: Import items from other workloads -->
+			<EntityType Name="entity">
+				<Key>
+					<PropertyRef Name="id"/>
+				</Key>
+				<Property Name="id" Type="Edm.String" Nullable="false"/>
+			</EntityType>
+			<ComplexType Name="Json" />
+			<EntityType Name="directoryObject" BaseType="self.entity" />
+			<EntityType Name="user" BaseType="self.directoryObject">
+				<NavigationProperty Name="favouriteCanteen" Type="self.canteen" />
+			</EntityType>
+			<EntityType Name="driveItem" BaseType="self.entity" />
+			<ComplexType Name="geoCoordinates">
+				<Property Name="altitude" Type="Edm.Double"/>
+				<Property Name="latitude" Type="Edm.Double"/>
+				<Property Name="longitude" Type="Edm.Double"/>
+			</ComplexType>
+
+			<!-- solutionsRoot is a shared type -->
+			<EntityType Name="solutionsRoot" ags:AddressUrl="https://fake_node" ags:AddressContainsEntitySetSegment="false" ags:IsOwner="false">
+				<NavigationProperty Name="canteens" Type="Collection(self.canteen)" ContainsTarget="true" ags:AddressUrl="https://canteencanarydeploymenthost/api/v1.0"/>
+				<Annotation Term="Org.OData.Capabilities.V1.BatchSupported" Bool="false" />
+			</EntityType>
+			<!-- End: Import items from other workloads -->
+
+			<EntityType Name="canteen" BaseType="self.entity"
+			ags:IsMaster="true"
+			ags:AddressUrl="https://localhost:44312/api/v1.0"
+			ags:DeriveFromGraphBaseType="true">
+				<Property Name="displayName" Type="Edm.String"/>
+				<Property Name="building" Type="Edm.String"/>
+				<Property Name="cuisineType" Type="Edm.String"/>
+				<Property Name="location" Type="self.geoCoordinates"/>
+				<Property Name="floorNumber" Type="Edm.Int32"/>
+				<Property Name="menuWebUrl" Type="Edm.String"/>
+				<Property Name="phone" Type="Edm.String"/>
+				<Property Name="mealsServed" Type="self.meal"/>
+				<Property Name="businessHours" Type="self.businessHours"/>
+				<Property Name="providerType" Type ="self.canteenProviderType"/>
+				<Property Name="chefResume" Type="self.Json" />
+				<Property Name="stationsPoster" Type="Edm.Stream"/>
+				<NavigationProperty Name="chef" Type="self.user"/>
+				<NavigationProperty Name="menuFile" Type="self.driveItem"/>
+			</EntityType>
+			<ComplexType Name="openState">
+				<Property Name="isOpen" Type="Edm.Boolean"/>
+				<Property Name="nextStateChangeDateTime" Type="Edm.DateTimeOffset"/>
+			</ComplexType>
+			<ComplexType Name="businessHours">
+				<Property Name="sunday" Type="self.hoursOfOperation"/>
+				<Property Name="monday" Type="self.hoursOfOperation"/>
+				<Property Name="tuesday" Type="self.hoursOfOperation"/>
+				<Property Name="wednesday" Type="self.hoursOfOperation"/>
+				<Property Name="thursday" Type="self.hoursOfOperation"/>
+				<Property Name="friday" Type="self.hoursOfOperation"/>
+				<Property Name="saturday" Type="self.hoursOfOperation"/>
+				<Property Name="specialHours" Type="Collection(self.specialHoursOfOperation)"/>
+				<Property Name="timeZone" Type="Edm.String"/>
+			</ComplexType>
+			<ComplexType Name="hoursOfOperation">
+				<Property Name="open" Type="Edm.TimeOfDay"/>
+				<Property Name="close" Type="Edm.TimeOfDay"/>
+			</ComplexType>
+			<ComplexType Name="specialHoursOfOperation" BaseType="self.hoursOfOperation">
+				<Property Name="date" Type="Edm.Date"/>
+			</ComplexType>
+			<EnumType Name="canteenProviderType">
+				<Member Name="outsourced" Value="1"/>
+				<Member Name="internal" Value="2"/>
+				<Member Name="unknownFutureValue" Value="3"/>
+			</EnumType>
+			<EnumType Name="meal" IsFlags="true">
+				<Member Name="breakfast" Value="1"/>
+				<Member Name="lunch" Value="2"/>
+				<Member Name="dinner" Value="4"/>
+				<Member Name="unknownFutureValue" Value="8"/>
+				<Member Name="snacks" Value="16"/>
+			</EnumType>
+			<Function Name="isOpenNow" IsBound="true">
+				<Parameter Name="bindingParameter" Type="self.canteen"/>
+				<ReturnType Type="self.openState"/>
+			</Function>
+			<EntityContainer Name="canteenService">
+				<Singleton Name="solutions" Type="self.solutionsRoot">
+					<NavigationPropertyBinding Path="canteens/chef" Target="users"/>
+				</Singleton>
+				<EntitySet Name="users" EntityType="self.user"/>
+				<Singleton Name="me" Type="self.user" />
+			</EntityContainer>
+			<Annotations Target="self.entity">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The base type of all resources in Microsoft Graph" />
+			</Annotations>
+			<Annotations Target="self.entity/id">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The unique identifier for the resource" />
+			</Annotations>
+			<Annotations Target="self.canteen">
+				<Annotation Term="Org.OData.Core.V1.Description" String="An establishment serving food to employees in the organization" />
+			</Annotations>
+			<Annotations Target="self.canteen/displayName">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The name of the canteen" />
+			</Annotations>
+			<Annotations Target="self.canteen/building">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The building where the canteen is located" />
+			</Annotations>
+			<Annotations Target="self.canteen/cuisineType">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The type of cuisine served by the canteen (ex. 'Tex-Mex', 'Thai', 'Indian', etc.)" />
+			</Annotations>
+			<Annotations Target="self.canteen/location">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The geographic coordinates and elevation of the canteen" />
+			</Annotations>
+			<Annotations Target="self.canteen/floorNumber">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The floor of the building where the canteen is located" />
+			</Annotations>
+			<Annotations Target="self.canteen/menuWebUrl">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The URL to the canteen's menu" />
+			</Annotations>
+			<Annotations Target="self.canteen/phone">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The canteen's phone number" />
+			</Annotations>
+			<Annotations Target="self.canteen/mealsServed">
+				<Annotation Term="Org.OData.Core.V1.Description" String="A set of flags indicating which types of meals are served by the canteen (ex. breakfast, lunch, etc.)" />
+			</Annotations>
+			<Annotations Target="self.canteen/businessHours">
+				<Annotation Term="Org.OData.Core.V1.Description" String="A collection of business hours for the canteen (open/close for each day of the week)" />
+			</Annotations>
+			<Annotations Target="self.canteen/chef">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The canteen's head chef" />
+			</Annotations>
+			<Annotations Target="self.canteen/menuFile">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The canteen's menu file (PDF, DOCX) in OneDrive for Business or SharePoint" />
+			</Annotations>
+			<Annotations Target="self.directoryObject">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Represents an Azure Active Directory object. The directoryObject type is the base type for many other directory entity types." />
+			</Annotations>
+			<Annotations Target="self.openState">
+				<Annotation Term="Org.OData.Core.V1.Description" String="An object representing the current state (open or closed) of the canteen, and the date and time when that will next change" />
+			</Annotations>
+			<Annotations Target="self.openState/isOpen">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Indicates current state of the canteen - `true` if the canteen is open, `false` if it is closed" />
+			</Annotations>
+			<Annotations Target="self.openState/nextStateChangeDateTime">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Specifies the date and time when the canteen's open state will next change" />
+			</Annotations>
+			<Annotations Target="self.geoCoordinates">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Provides geographic coordinates and elevation of a location" />
+			</Annotations>
+			<Annotations Target="self.geoCoordinates/altitude">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The altitude (height), in feet,  above sea level for the item." />
+			</Annotations>
+			<Annotations Target="self.geoCoordinates/latitude">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The latitude, in decimal, for the item." />
+			</Annotations>
+			<Annotations Target="self.geoCoordinates/longitude">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The longitude, in decimal, for the item" />
+			</Annotations>
+			<Annotations Target="self.businessHours">
+				<Annotation Term="Org.OData.Core.V1.Description" String="A set of paired values indicating standard open and close times for each day of the week" />
+			</Annotations>
+			<Annotations Target="self.businessHours/sunday">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The standard open and close times for Sunday" />
+			</Annotations>
+			<Annotations Target="self.businessHours/monday">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The standard open and close times for Monday" />
+			</Annotations>
+			<Annotations Target="self.businessHours/tuesday">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The standard open and close times for Tuesday" />
+			</Annotations>
+			<Annotations Target="self.businessHours/wednesday">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The standard open and close times for Wednesday" />
+			</Annotations>
+			<Annotations Target="self.businessHours/thursday">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The standard open and close times for Thursday" />
+			</Annotations>
+			<Annotations Target="self.businessHours/friday">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The standard open and close times for Friday" />
+			</Annotations>
+			<Annotations Target="self.businessHours/saturday">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The standard open and close times for Saturday" />
+			</Annotations>
+			<Annotations Target="self.businessHours/specialHours">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Contains a set of exceptions to standard business hours (ex. special holiday hours, etc.)" />
+			</Annotations>
+			<Annotations Target="self.businessHours/timeZone">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The IANA time zone identifier for the canteen's time zone" />
+			</Annotations>
+			<Annotations Target="self.hoursOfOperation">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The open and close times for a canteen for a given day of the week" />
+			</Annotations>
+			<Annotations Target="self.hoursOfOperation/open">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The time of day the canteen opens" />
+			</Annotations>
+			<Annotations Target="self.hoursOfOperation/close">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The time of day the canteen closes" />
+			</Annotations>
+			<Annotations Target="self.specialHoursOfOperation">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Indicates an exception to standard business hours" />
+			</Annotations>
+			<Annotations Target="self.specialHoursOfOperation/date">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The date the exception applies to" />
+			</Annotations>
+			<Annotations Target="self.user">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Represents an Azure AD user account" />
+			</Annotations>
+			<Annotations Target="self.driveItem">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Represents a file, folder, or other item stored in a drive" />
+			</Annotations>
+			<Annotations Target="self.meal">
+				<Annotation Term="Org.OData.Core.V1.Description" String="A flags enumeration of meal types" />
+			</Annotations>
+			<Annotations Target="self.meal/breakfast">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Set to indicate the canteen serves breakfast (value: 1)" />
+			</Annotations>
+			<Annotations Target="self.meal/lunch">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Set to indicate the canteen serves lunch (value: 2)" />
+			</Annotations>
+			<Annotations Target="self.meal/dinner">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Set to indicate the canteen serves dinner (value: 4)" />
+			</Annotations>
+			<Annotations Target="self.meal/unknownFutureValue">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Marker value for future compatibility (value: 8)" />
+			</Annotations>
+			<Annotations Target="self.meal/snacks">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Set to indicate the canteen serves snacks (value: 16)" />
+			</Annotations>
+			<Annotations Target="self.Json">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Unschematized JSON content." />
+			</Annotations>
+			<Annotations Target="self.canteen/providerType">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The type of provider running the canteen." />
+			</Annotations>
+			<Annotations Target="self.canteen/chefResume">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The resume of the chef imported as JSON from the HR system." />
+			</Annotations>
+			<Annotations Target="self.canteen/stationsPoster">
+				<Annotation Term="Org.OData.Core.V1.Description" String="A PDF poster describing the various food stations inside the canteen." />
+			</Annotations>
+			<Annotations Target="self.canteenProviderType">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The kind of company that runs a canteen." />
+			</Annotations>
+			<Annotations Target="self.canteenProviderType/outsourced">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The canteen is run by an outsourced company." />
+			</Annotations>
+			<Annotations Target="self.canteenProviderType/internal">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The canteen is run by internal staff members." />
+			</Annotations>
+			<Annotations Target="self.canteenProviderType/unknownFutureValue">
+				<Annotation Term="Org.OData.Core.V1.Description" String="Marker value for future compatibility." />
+			</Annotations>
+			<Annotations Target="self.solutionsRoot">
+				<Annotation Term="Org.OData.Core.V1.Description" String="A root node on the Graph." />
+			</Annotations>
+			<Annotations Target="self.solutionsRoot/canteens">
+				<Annotation Term="Org.OData.Core.V1.Description" String="The canteens in the tenant." />
+			</Annotations>
+
+		</Schema>
+	</edmx:DataServices>
+</edmx:Edmx>
